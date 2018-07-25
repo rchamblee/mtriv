@@ -6,7 +6,7 @@ import sys
 import shutil
 
 TCP_IP = 'localhost'
-TCP_PORT =  80
+TCP_PORT = 80
 BUFFER_SIZE = 1024
 
 
@@ -14,16 +14,17 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sIP = TCP_IP
 sP = TCP_PORT
 try:
-	if(sys.argv[1]):
-		sIP = sys.argv[1]
-		if(sys.argv[2]):
-			sP = sys.argv[2]
+	sIP = sys.argv[1]
+	try:
+		sP = sys.argv[2]
+	except:
+		sP = int(input("You forgot the port: "))
 except:
 	sIP = input("What's the IP then?: ")
-	sP = int(input("Oi, and the port?"))
+	sP = int(input("Oi, and the port?: "))
 s.connect((sIP, int(sP)))
 print("Who's you?")
-nick = input()        
+nick = input()
 
 s.sendto(nick.encode('utf-8'), (TCP_IP,TCP_PORT))
 
@@ -44,10 +45,10 @@ def set_scroll(n):
     return CSI + b'0;%dr' % n
 
 emit(CLEAR, set_scroll(height))
-    
+
 def getData(sock):
     timecounter = 0
-    
+
     while True:
         data_raw = s.recv(BUFFER_SIZE)
         data = data_raw.decode('utf-8')
@@ -69,12 +70,12 @@ def getData(sock):
                 if(not response):
                     print("Connection DED :c. Attempting reconnect...")
                     try:
-                        s.connect((TCP_IP,TCP_PORT))
+                        s.connect((sIP,sP))
                     except:
                         print("unable to recover connection to " + TCP_IP + " quitting....")
                 else:
                     print("Unknown error occured.... dumping $response\n" + response)
-                    
+
 
 t = Thread(target=getData, args=(s,))
 t.daemon = True
@@ -98,4 +99,3 @@ try:
 except KeyboardInterrupt:
     #Disable scrolling, but leave cursor below the input row
     emit(set_scroll(0), GOTO_INPUT, b'\n')
-    
