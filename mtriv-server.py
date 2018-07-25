@@ -6,7 +6,7 @@ from time import sleep
 import random
 
 TCP_IP = 'localhost'
-TCP_PORT =  80
+TCP_PORT =  4444
 BUFFER_SIZE = 1024
 
 new_data = ''
@@ -19,6 +19,29 @@ class Question:
         self.answer = answer.upper()
         self.solved = False
 
+class QuestThread(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.should_stop = False
+
+    def run(self):
+        is_Stopped = (lambda: self.should_stop)
+        while(not self.should_stop):
+            quest = random.choice(qaPairs)
+            print("Initiating new question...")
+            msgClients(quest.prompt)
+            solveCheck(quest,self)
+            if(self.should_stop):
+                msgClients("Stopping trivia questions... :c")
+                break
+            sleep(0.25)
+            msgClients("Next question in 5s....")
+            sleep(5)
+
+    def stop(self):
+        self.should_stop = True
+
+        
 class ClientThread(Thread):
     def __init__(self,ip,port,sock,nick):
         Thread.__init__(self)
@@ -36,6 +59,8 @@ class ClientThread(Thread):
         global new_data, new_data_src,scorePairs
         newPair = (self.nick,self.score)
         scorePairs.append(newPair)
+        should_stop = False
+        qThread = QuestThread()
         while True:
             rawdata = self.sock.recv(BUFFER_SIZE)
             curtime = time.strftime ("%H:%M")
@@ -47,10 +72,18 @@ class ClientThread(Thread):
                 response = "pong"
                 self.sock.send(response.encode('utf-8'))
             elif(self.data == "!startq"):
-                qThread = Thread(target=beginQuestion,args=())
-                qThread.start()
+                if(qThread.isAlive()):
+                    msgClients("Trivia already in session, use !stopq to stop.")
+                else:
+                    try:
+                        qThread.should_stop = False
+                        qThread.start()
+                    except:
+                        qThread = QuestThread()
+                        qThread.start()
             elif(self.data == "!stopq"):
                 qThread.stop()
+               
             elif(self.data == "!scores" or self.data == "!score"):
                 msgClients("Scores----------")
                 for pair in scorePairs:
@@ -63,7 +96,7 @@ class ClientThread(Thread):
                     try:
                         thread.sock.send(("["+curtime+"]" + self.nick + ': ' + self.data).encode('utf-8'))
                     except:
-                        print("Closing thread for " + ip + ": Connection broken")
+                        print("Closing thread for " + self.ip + ": Connection broken")
                         return 1
 
 def msgClients(message):
@@ -73,9 +106,9 @@ def msgClients(message):
 
             
         
-def solveCheck(Question):
+def solveCheck(Question,qThread):
     global new_data,scorePairs
-    while(not Question.solved):
+    while(not Question.solved and not qThread.should_stop):
         if(new_data == Question.answer):
             Question.solved = True
             msgClients("Question has been solved! Solved by: " + new_data_src)
@@ -94,14 +127,7 @@ def solveCheck(Question):
     return 1
     
         
-def beginQuestion():
-    while(True):
-        quest = random.choice(qaPairs)
-        print("Initiating new question...")
-        msgClients(quest.prompt)
-        solveCheck(quest)
-        msgClients("Next question in 5s....")
-        sleep(5)
+   
 
 def loadqDoc(filename):
     import re
