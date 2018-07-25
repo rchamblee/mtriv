@@ -5,7 +5,7 @@ import time
 from time import sleep
 import random
 
-TCP_IP = '172.17.0.2'
+TCP_IP = 'localhost'
 TCP_PORT =  80
 BUFFER_SIZE = 1024
 
