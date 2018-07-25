@@ -26,7 +26,7 @@ s.connect((sIP, int(sP)))
 print("Who's you?")
 nick = input()
 
-s.sendto(nick.encode('utf-8'), (TCP_IP,TCP_PORT))
+s.sendto(nick.encode('utf-8'), (sIP,sP))
 
 height = shutil.get_terminal_size().lines - 1
 stdout_write_bytes = sys.stdout.buffer.write
@@ -72,7 +72,7 @@ def getData(sock):
                     try:
                         s.connect((sIP,sP))
                     except:
-                        print("unable to recover connection to " + TCP_IP + " quitting....")
+                        print("unable to recover connection to " + sIP + " quitting....")
                 else:
                     print("Unknown error occured.... dumping $response\n" + response)
 
@@ -90,7 +90,7 @@ try:
             if(data == "/quit"):
                 emit(UNSAVE_CURSOR)
                 break
-            s.sendto(data.encode('utf-8'), (TCP_IP,TCP_PORT))
+            s.sendto(data.encode('utf-8'), (sIP,sP))
         except:
             continue
         finally:
