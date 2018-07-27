@@ -95,7 +95,8 @@ try:
             continue
         finally:
             emit(UNSAVE_CURSOR)
-
+            
 except KeyboardInterrupt:
     #Disable scrolling, but leave cursor below the input row
     emit(set_scroll(0), GOTO_INPUT, b'\n')
+    s.close()
