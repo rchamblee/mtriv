@@ -27,7 +27,7 @@ def sendMsg(args):
 	msgContents = inputLn.value
 	inputLn.clear()
 	s.send(msgContents.encode('utf-8'))
-nick = "Aloura"
+nick = str(input("Nickname?: "))
 def conn():
 	sIP = ipBox.value
 	sP = portBox.value
