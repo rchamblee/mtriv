@@ -5,7 +5,7 @@ import time
 from time import sleep
 import random
 
-TCP_IP = 'localhost'
+TCP_IP = '192.168.43.10'
 TCP_PORT =  4444
 BUFFER_SIZE = 1024
 
@@ -89,6 +89,13 @@ class ClientThread(Thread):
                 for pair in scorePairs:
                     msgClients(pair[0] + ": " + str(pair[1]))
                     sleep(0.2)
+            elif(self.data == "!users"):
+                ucounter=0
+                msgClients("Connected Users:")
+
+                for thread in threads:
+                    ucounter += 1
+                    msgClients(thread.nick)
             else:
                 new_data = self.data
                 new_data_src = self.nick
@@ -154,18 +161,27 @@ threads = []
 loadqDoc("qdoc.mtq")
 
 while True:
-    tcpsock.listen(5)
-    print ("Waiting for incoming connections...")
-    (conn, (ip,port)) = tcpsock.accept()
-    conn_Nick = conn.recv(1024).decode('utf-8')
-    print ('Got connection from ', (ip,port,conn_Nick))
-    newthread = ClientThread(ip,port,conn,conn_Nick)
-    newthread.start()
-    threads.append(newthread)
     for thread in threads:
         if not thread.isAlive():
             thread.handled = True
+            try:
+                msgClients("User " + thread.nick + " disconnected.")
+            except:
+                print("Thread destroyed without nick property")
     threads = [thread for thread in threads if not thread.handled]
+    try:
+        tcpsock.settimeout(5)
+        tcpsock.listen(5)
+        (conn, (ip,port)) = tcpsock.accept()
+        conn_Nick = conn.recv(1024).decode('utf-8')
+        print ('Got connection from ', (ip,port,conn_Nick))
+        newthread = ClientThread(ip,port,conn,conn_Nick)
+        newthread.start()
+        threads.append(newthread)
+    except KeyboardInterrupt:
+        break
+    except:
+        continue 
         
 
 for thread in threads:
